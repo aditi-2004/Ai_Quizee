@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .setup-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quiz-section {
+            display: none;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: white;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .option.correct {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .option.incorrect {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            display: block;
+        }
+
+        .progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .progress-item {
+            text-align: center;
+        }
+
+        .progress-item .label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .progress-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .chat-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .chat-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: 20%;
+        }
+
+        .message.ai {
+            background: white;
+            margin-right: 20%;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 AI Study Assistant</h1>
+            <p>Master your subjects with personalized quizzes and instant explanations</p>
+        </div>
+
+        <div class="content">
+            <div class="error" id="error"></div>
+
+            <!-- Setup Section -->
+            <div class="setup-section" id="setupSection">
+                <div class="input-group">
+                    <label for="className">Class:</label>
+                    <input type="text" id="className" placeholder="e.g., 10th Grade">
+                </div>
+
+                <div class="input-group">
+                    <label for="bookName">Book Name:</label>
+                    <input type="text" id="bookName" placeholder="e.g., Science NCERT">
+                </div>
+
+                <div class="input-group">
+                    <label for="chapterName">Chapter Name:</label>
+                    <input type="text" id="chapterName" placeholder="e.g., Chemical Reactions and Equations">
+                </div>
+
+                <div class="input-group">
+                    <label for="difficulty">Difficulty Level:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+
+                <button class="btn" id="startBtn">Start Learning 🚀</button>
+            </div>
+
+            <!-- Loading Section -->
+            <div class="loading" id="loadingSection" style="display: none;">
+                <div class="spinner"></div>
+                <p>Generating personalized quiz for you...</p>
+            </div>
+
+            <!-- Quiz Section -->
+            <div class="quiz-section" id="quizSection">
+                <div class="progress">
+                    <div class="progress-item">
+                        <div class="label">Question</div>
+                        <div class="value" id="currentQuestion">1</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="label">Correct</div>
+                        <div class="value" id="correctCount">0</div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="label">Total</div>
+                        <div class="value" id="totalQuestions">5</div>
+                    </div>
+                </div>
+
+                <div class="question-card" id="questionCard">
+                    <div class="question-text" id="questionText"></div>
+                    <div class="options" id="optionsContainer"></div>
+                    <div class="feedback" id="feedback"></div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn" id="nextBtn" style="display: none;">Next Question →</button>
+                    <button class="btn" id="newQuizBtn" style="display: none;">New Quiz 🔄</button>
+                    <button class="btn" id="askDoubtBtn">Ask a Doubt 💬</button>
+                </div>
+
+                <!-- Chat Section -->
+                <div class="chat-section" id="chatSection">
+                    <h3>Ask Your Doubts</h3>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Type your question...">
+                        <button class="btn" id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://api.groq.com/openai/v1/chat/completions';
+        
+        let currentQuiz = [];
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+        let apiKey = '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';
+        let studyContext = {};
+        let weakAreas = [];
+        let answeredQuestions = [];
+
+        // Elements
+        const setupSection = document.getElementById('setupSection');
+        const loadingSection = document.getElementById('loadingSection');
+        const quizSection = document.getElementById('quizSection');
+        const chatSection = document.getElementById('chatSection');
+        const errorDiv = document.getElementById('error');
+
+        // Start button
+        document.getElementById('startBtn').addEventListener('click', startLearning);
+
+        async function startLearning() {
+            const className = document.getElementById('className').value.trim();
+            const bookName = document.getElementById('bookName').value.trim();
+            const chapterName = document.getElementById('chapterName').value.trim();
+            const difficulty = document.getElementById('difficulty').value;
+
+            if (!className || !bookName || !chapterName) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            studyContext = { className, bookName, chapterName, difficulty };
+
+            setupSection.style.display = 'none';
+            loadingSection.style.display = 'block';
+
+            try {
+                await generateQuiz();
+                loadingSection.style.display = 'none';
+                quizSection.style.display = 'block';
+                displayQuestion();
+            } catch (error) {
+                console.error('Error details:', error);
+                showError('Failed to generate quiz: ' + error.message + '. Please check the console for details.');
+                loadingSection.style.display = 'none';
+                setupSection.style.display = 'block';
+            }
+        }
+
+        async function generateQuiz() {
+            let prompt = '';
+            
+            if (weakAreas.length > 0) {
+                prompt = `The student has shown weakness in these topics: ${weakAreas.join(', ')}. 
+                
+Create a quiz focusing on these weak areas for a student studying ${studyContext.className}, from the book "${studyContext.bookName}", chapter "${studyContext.chapterName}".`;
+            } else {
+                prompt = `Create a quiz for a student studying ${studyContext.className}, from the book "${studyContext.bookName}", chapter "${studyContext.chapterName}".`;
+            }
+            
+            prompt += `
+            
+Generate exactly 5 DIFFERENT multiple choice questions of ${studyContext.difficulty} difficulty level. Make sure these questions are NOT similar to previously asked questions.
+
+Return ONLY a valid JSON array with this exact structure, no additional text:
+[
+  {
+    "question": "Question text here",
+    "topic": "Specific topic this question tests",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": 0,
+    "explanation": "Detailed explanation of why this answer is correct and why other options are wrong"
+  }
+]
+
+The correctAnswer should be the index (0-3) of the correct option.`;
+
+            const response = await callGeminiAPI(prompt);
+            const jsonMatch = response.match(/\[[\s\S]*\]/);
+            
+            if (jsonMatch) {
+                currentQuiz = JSON.parse(jsonMatch[0]);
+                currentQuestionIndex = 0;
+                correctAnswers = 0;
+            } else {
+                throw new Error('Invalid response format');
+            }
+        }
+
+        function displayQuestion() {
+            if (currentQuestionIndex >= currentQuiz.length) {
+                showResults();
+                return;
+            }
+
+            const question = currentQuiz[currentQuestionIndex];
+            
+            // Make sure elements are visible for questions
+            const questionText = document.getElementById('questionText');
+            const optionsContainer = document.getElementById('optionsContainer');
+            const feedback = document.getElementById('feedback');
+            
+            questionText.style.display = 'block';
+            optionsContainer.style.display = 'flex';
+            
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('totalQuestions').textContent = currentQuiz.length;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            questionText.textContent = question.question;
+            
+            // Reset feedback and next button
+            feedback.style.display = 'none';
+            feedback.className = 'feedback';
+            document.getElementById('nextBtn').style.display = 'none';
+
+            optionsContainer.innerHTML = '';
+
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = option;
+                optionDiv.style.pointerEvents = 'auto'; // Re-enable clicking
+                optionDiv.addEventListener('click', () => selectAnswer(index));
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+
+        async function selectAnswer(selectedIndex) {
+            const question = currentQuiz[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            
+            options.forEach(opt => opt.style.pointerEvents = 'none');
+
+            const isCorrect = selectedIndex === question.correctAnswer;
+            
+            // Track the question and answer
+            answeredQuestions.push({
+                question: question.question,
+                topic: question.topic || 'General',
+                isCorrect: isCorrect
+            });
+            
+            // Add to weak areas if incorrect
+            if (!isCorrect && question.topic) {
+                if (!weakAreas.includes(question.topic)) {
+                    weakAreas.push(question.topic);
+                }
+            }
+            
+            options[selectedIndex].classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect) {
+                options[question.correctAnswer].classList.add('correct');
+            }
+
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+            
+            // Enhanced explanation showing why wrong and why correct
+            let feedbackHTML = `<strong>${isCorrect ? '✓ Correct!' : '✗ Incorrect'}</strong>`;
+            
+            if (!isCorrect) {
+                feedbackHTML += `
+                    <p><strong>Your answer:</strong> ${question.options[selectedIndex]}</p>
+                    <p><strong>Correct answer:</strong> ${question.options[question.correctAnswer]}</p>
+                `;
+            }
+            
+            feedbackHTML += `<p><strong>Explanation:</strong> ${question.explanation}</p>`;
+            
+            feedback.innerHTML = feedbackHTML;
+
+            if (isCorrect) {
+                correctAnswers++;
+                document.getElementById('correctCount').textContent = correctAnswers;
+            }
+
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentQuestionIndex++;
+            displayQuestion();
+        });
+
+        function showResults() {
+            const percentage = (correctAnswers / currentQuiz.length) * 100;
+            const questionCard = document.getElementById('questionCard');
+            
+            let message = '';
+            let weakAreasHTML = '';
+            
+            if (percentage >= 80) {
+                message = '🎉 Excellent! You have mastered this chapter!';
+            } else if (percentage >= 60) {
+                message = '👍 Good job! Keep practicing to improve further.';
+            } else {
+                message = '📚 Keep studying! Review the chapter and try again.';
+            }
+            
+            // Show weak areas if any
+            if (weakAreas.length > 0) {
+                weakAreasHTML = `
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107;">
+                        <h3 style="color: #856404; margin-bottom: 10px;">📌 Areas to Focus On:</h3>
+                        <ul style="text-align: left; color: #856404;">
+                            ${weakAreas.map(area => `<li>${area}</li>`).join('')}
+                        </ul>
+                        <p style="color: #856404; margin-top: 10px;"><strong>The next quiz will focus on these topics!</strong></p>
+                    </div>
+                `;
+            }
+
+            // Replace only the inner content, keep the structure
+            questionCard.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2>Quiz Completed!</h2>
+                    <div style="font-size: 3em; margin: 20px 0;">${percentage.toFixed(0)}%</div>
+                    <p style="font-size: 1.2em;">${message}</p>
+                    <p style="margin-top: 20px;">You got ${correctAnswers} out of ${currentQuiz.length} questions correct.</p>
+                    ${weakAreasHTML}
+                </div>
+                <div class="question-text" id="questionText" style="display:none;"></div>
+                <div class="options" id="optionsContainer" style="display:none;"></div>
+                <div class="feedback" id="feedback" style="display:none;"></div>
+            `;
+
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('newQuizBtn').style.display = 'block';
+        }
+
+        document.getElementById('newQuizBtn').addEventListener('click', async () => {
+            document.getElementById('newQuizBtn').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            quizSection.style.display = 'none';
+            loadingSection.style.display = 'block';
+            
+            // Reset current quiz state
+            currentQuestionIndex = 0;
+            correctAnswers = 0;
+            
+            try {
+                await generateQuiz();
+                loadingSection.style.display = 'none';
+                quizSection.style.display = 'block';
+                displayQuestion();
+            } catch (error) {
+                console.error('Quiz generation error:', error);
+                showError('Failed to generate new quiz: ' + error.message);
+                loadingSection.style.display = 'none';
+                quizSection.style.display = 'block';
+                showResults(); // Show results again if failed
+            }
+        });
+
+        // Chat functionality
+        document.getElementById('askDoubtBtn').addEventListener('click', () => {
+            const chatSection = document.getElementById('chatSection');
+            chatSection.style.display = chatSection.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+
+            const prompt = `You are a helpful tutor. The student is studying ${studyContext.className}, ${studyContext.bookName}, chapter "${studyContext.chapterName}". 
+            
+Student question: ${message}
+
+Provide a clear, concise explanation that helps them understand the concept better.`;
+
+            try {
+                const response = await callGeminiAPI(prompt);
+                addMessage(response, 'ai');
+            } catch (error) {
+                addMessage('Sorry, I encountered an error. Please try again.', 'ai');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async function callGeminiAPI(prompt) {
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile',
+                        messages: [{
+                            role: 'user',
+                            content: prompt
+                        }],
+                        temperature: 0.7,
+                        max_tokens: 2000
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('API Error:', errorData);
+                    throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                throw error;
+            }
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
